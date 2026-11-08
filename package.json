@@ -1,0 +1,47 @@
+{
+  "name": "dsh-mimavault",
+  "version": "0.1.0",
+  "displayName": "MimaVault 密匣",
+  "description": "让 DSH 检索本机 MimaVault 密码库中的密码、API Key 与动态验证码；明文默认不进入模型上下文。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "mimavault",
+    "password-manager",
+    "secrets"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.0 <5.0.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.1 <0.4.0-0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/startime-ltk/dsh-mimavault.git"
+  },
+  "bugs": {
+    "url": "https://github.com/startime-ltk/dsh-mimavault/issues"
+  },
+  "homepage": "https://github.com/startime-ltk/dsh-mimavault#readme"
+}

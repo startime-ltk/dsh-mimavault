@@ -1,0 +1,11 @@
+# 把 dsh-mimavault 挂进当前 profile。
+#
+# 插入一行插件条目即可；不覆盖 profile 里任何已有条目。
+# 可选配置（不写则用插件内默认值）：
+#   requestTimeoutMs  调 MimaVault 本地 API 的超时，默认 8000
+#   maxResponseBytes  vault_call_api 返回体上限，默认 20000
+#   allowedHosts      额外放行的域名（如 "*.openai.com"），默认空
+#   apiJsonPath       覆盖描述文件路径（一般不用写，默认 %APPDATA%\MimaVault\api.json）
+- insert:
+    - id: dsh-mimavault
+      name: dsh-mimavault
