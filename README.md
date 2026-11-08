@@ -46,7 +46,7 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
 
 ### 1. MimaVault 侧
 
-需要 MimaVault 含 `feat/local-api` 分支的本地 API（`v8.36.0+`）：
+需要 MimaVault **v8.35.5 或更高**（本地 API 已合入 `main`）：
 
 1. 启动 MimaVault 并用主密码登录；
 2. 右键托盘图标 → 勾选 **Local API (DSH)**；
