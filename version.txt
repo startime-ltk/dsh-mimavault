@@ -1,1 +1,1 @@
-0.3.1|https://github.com/startime-ltk/dsh-mimavault/releases/tag/v0.3.1|插件内检查更新：多源取最大版本、Tags 兜底、不自动覆盖本地开发版
+0.3.2|https://github.com/startime-ltk/dsh-mimavault/releases/tag/v0.3.2|内置明文库支持手动新增/编辑/删除条目、分类专属字段、TOTP Base32 输入
