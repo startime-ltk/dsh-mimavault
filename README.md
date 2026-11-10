@@ -19,6 +19,48 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
 
 **插件本身不碰任何加密数据**，它只是本地 API 的客户端。真正的解密发生在 MimaVault 进程里。
 
+> **v0.3.0 起支持两种数据源**（侧栏面板里切换）。上图画的是默认的 external 模式。
+> builtin 模式不装 PC 密匣也能用，但**条目以明文存盘、不加密** —— 详见下方「两种模式」。
+
+## 两种模式
+
+| | **external（默认，更安全）** | **builtin（免安装，不加密）** |
+|---|---|---|
+| 数据在哪 | PC 密匣的加密库 | `%APPDATA%/MimaVault/builtin-vault.json`（**明文 JSON**） |
+| 密钥在哪 | 密匣进程内，PBKDF2 派生 | **无主密码、无加密** |
+| 要不要装密匣 | 要 | 不用 |
+| 明文是否进 DSH 进程 | 否 | 是 |
+| 谁能读库 | 需主密码解锁 | 任何能读该文件的程序 |
+| `vault_call_api` | 正常（进程隔离 + 域名白名单） | **默认关闭**，需显式配置 `enableBuiltinCallApi: true` |
+
+切换只影响本插件，**两套数据互相独立**：拨到内置库时，PC 密匣里的条目不会自动出现。
+
+### 内置明文库的安全边界（务必知情）
+
+内置模式是按「不设主密码」的要求实现的：条目**明文写入本地文件**，界面里也明确写着「明文存盘，不加密」。任何能读到该文件的进程（含 DSH 的 `pwsh`/`bash` 工具、同机程序、备份/同步软件）都能看到全部密码。
+
+因此内置模式下：
+
+- 插件**不再能**提供 external 模式那种「能力上拿不到明文」的架构保证，只剩「工具约定不返回」；
+- `vault_copy` 改由 Host 写系统剪贴板（detached PowerShell，30 秒条件清除），明文会经过 DSH 所在的机器；
+- `vault_call_api` 默认关闭（密钥与出站请求同处一个进程，少一层隔离）；
+- 想更安全，装 PC 密匣并切回 external 即可，内置库数据保留不动。
+
+### 数据互通（不经过 AI）
+
+内置库通过**导入密匣导出的明文 CSV** 互通：在密匣里「导出 CSV（明文）」→ 侧栏面板粘贴 → 点「导入 CSV」。解析在 Host 里用 `builtin-store.js` 的 CSV 状态机完成，**不把明文发给模型、不进对话记录**。
+
+支持 MimaVault `CsvUtil` 的表头别名（`name/username/password/notes/totp` 及 `api_key`/`wifi_ssid`/`bank_card_no` 等专属列）、UTF-8 BOM、引号转义、内嵌换行、空行跳过，并能从专属字段推断分类。
+
+> 不要用「把明文贴给 AI 让它转格式」的方式：那会把整个库的明文一次性送进会话历史与模型服务商，而且模型容易改错密码里的 `0/O`、`1/l/I`。CSV 导入是纯机械映射，精确且不过模型。
+
+### 清除（二次确认）
+
+- 侧栏「清空内置库」按钮 → 生成清除请求 → 弹确认框 → **人点「确认清空」**才执行；
+- AI 也可调 `vault_clear` 发起请求，但**不能直接删除**，必须等同一个人点确认；
+- 执行前自动留一份备份（`builtin-vault.json.backup`），面板有「从备份恢复」；
+- 请求 5 分钟过期，确认令牌不匹配会被拒。
+
 ## 安全模型
 
 | 关切 | 做法 |
@@ -40,7 +82,8 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
 | `vault_copy` | 把指定字段复制到剪贴板（密匣侧执行） | 否 |
 | `vault_totp` | 取 6 位动态验证码 + 剩余秒数 | 仅短时效验证码 |
 | `vault_generate` | 生成新的随机口令 | 是（新生成，非库中秘密） |
-| `vault_call_api` | 用库中令牌代理发起 HTTP 请求 | 否（只有对方响应） |
+| `vault_call_api` | 用库中令牌代理发起 HTTP 请求（builtin 模式默认关闭） | 否（只有对方响应） |
+| `vault_clear` | **只发起**清空内置库的请求，须人工确认；不直接删数据 | 否 |
 
 ## 侧栏面板
 
@@ -60,19 +103,14 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
 可执行文件路径按「配置 `appPath` → `%LOCALAPPDATA%\Programs\密匣 MimaVault\` → 各盘符
 `\Programs\密匣 MimaVault\`」依次探测，面板底部会显示实际解析到的路径。
 
-面板只显示连接状态，不展示任何密码数据。
+面板在 external 模式只显示连接状态；builtin 模式额外提供模式切换、CSV 导入、条目列表、一键清除（二次确认）。面板只展示元数据，不展示任何密码明文。
 
 ## 部署
 
-### 1. MimaVault 侧
+### 1. 选择模式
 
-需要 MimaVault **v8.35.5 或更高**（本地 API 已合入 `main`）：
-
-1. 启动 MimaVault 并用主密码登录；
-2. 右键托盘图标 → 勾选 **Local API (DSH)**；
-3. 确认提示里显示的凭据路径 `%APPDATA%\MimaVault\api.json` 已生成。
-
-> 取消勾选、锁定、自动登出或退出程序，API 立即失效。
+- **external**：需要 MimaVault **v8.35.5 或更高**，启动并登录后托盘勾选 `Local API (DSH)`，确认 `%APPDATA%\MimaVault\api.json` 已生成。取消勾选/锁定/自动登出/退出程序，API 立即失效。
+- **builtin**：不需要安装任何东西，侧栏面板里点「内置明文库（免安装）」即可。数据从密匣导出的明文 CSV 导入。
 
 ### 2. DSH 侧
 
@@ -110,13 +148,18 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
     allowedHosts:               # 额外放行的域名（默认只允许条目 api_endpoint 的域名）
       - "*.openai.com"
     apiJsonPath: ""             # 一般不用改
+    appPath: ""                 # 密匣 exe 路径（不填就自动探测各盘符）
+    storePath: ""               # 内置库路径（默认 %APPDATA%/MimaVault/builtin-vault.json）
+    enableBuiltinCallApi: false # 内置模式是否允许 vault_call_api（默认关闭，不建议开）
 ```
 
 ## 已知限制
 
-- 必须先手动启动并登录 MimaVault，插件无法代为解锁（主密码永不经过 DSH 进程）。
-- `vault_call_api` 只支持单次请求，不处理重定向与分页。
-- 本插件不做写操作（新增/修改条目），库的维护仍在 MimaVault 界面里完成。
+- external 模式必须先手动启动并登录 MimaVault，插件无法代为解锁（主密码永不经过 DSH 进程）。
+- builtin 模式**不加密**，明文存盘；两套数据独立，切换不会自动迁移。
+- `vault_call_api` 只支持单次请求，不处理重定向与分页；builtin 模式默认关闭。
+- 清空内置库必须人工确认；备份文件本身也是明文。
+- 内置库的剪贴板复制依赖 Windows PowerShell；非 Windows 环境不支持。
 
 ## 许可
 
