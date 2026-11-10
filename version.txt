@@ -1,0 +1,1 @@
+0.3.0|https://github.com/startime-ltk/dsh-mimavault/releases/tag/v0.3.0|双模式数据源：PC 密匣 / 内置明文库 + 侧栏面板 + 检查更新

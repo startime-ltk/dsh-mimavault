@@ -105,6 +105,26 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
 
 面板在 external 模式只显示连接状态；builtin 模式额外提供模式切换、CSV 导入、条目列表、一键清除（二次确认）。面板只展示元数据，不展示任何密码明文。
 
+## 检查更新
+
+侧栏「关于插件」区块显示**当前版本**，点「检查更新」走多源查询：
+
+| 源 | 说明 |
+|---|---|
+| GitHub 直连 | `raw.githubusercontent.com/.../main/version.txt`，带时间戳绕缓存 |
+| 镜像 | `ghfast.top` 代理同一文件 |
+| GitHub Tags API | 仅当上面两个文本源**都失败**时才问，从 tags 取最大版本 |
+
+**多源取版本号最大者**，防止镜像返回旧缓存。**不用 jsDelivr CDN 做版本源** —— MimaVault v8.35.4 实测 CDN 会把 `version.txt` 缓存成几个版本前的旧内容，加时间戳也无效，会让人"更新"回旧版。
+
+版本清单在仓库根 `version.txt`，格式 `版本|Release 页面 URL|一句话说明`。
+
+结果 5 分钟缓存，点「检查更新」是强制刷新。发现新版时给出 Release 链接与「全部版本」链接，并提示：
+
+> 当前 profile 以 `link:` 挂的是本地开发目录，插件**不会自动覆盖**它。请拉取新版本后重启 DSH，或在 DSH 插件管理页重新安装。
+
+即：本功能只做**检查与提示**，不自动下载/替换插件代码。
+
 ## 部署
 
 ### 1. 选择模式
@@ -151,6 +171,7 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
     appPath: ""                 # 密匣 exe 路径（不填就自动探测各盘符）
     storePath: ""               # 内置库路径（默认 %APPDATA%/MimaVault/builtin-vault.json）
     enableBuiltinCallApi: false # 内置模式是否允许 vault_call_api（默认关闭，不建议开）
+    updateTimeoutMs: 8000       # 检查更新时每个版本源的超时
 ```
 
 ## 已知限制

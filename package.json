@@ -1,6 +1,6 @@
 {
   "name": "dsh-mimavault",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "displayName": "MimaVault 密匣",
   "description": "让 DSH 检索本机 MimaVault 密码库中的密码、API Key 与动态验证码；明文默认不进入模型上下文。",
   "type": "module",
