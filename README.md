@@ -42,6 +42,26 @@ DSH Host 进程                          MimaVault 进程（须已解锁）
 | `vault_generate` | 生成新的随机口令 | 是（新生成，非库中秘密） |
 | `vault_call_api` | 用库中令牌代理发起 HTTP 请求 | 否（只有对方响应） |
 
+## 侧栏面板
+
+插件在侧栏面板列表里注册了一行「密匣」（与 purge 同一槽位 `sidebar.panellist`，
+`order` 取 31，紧排在其下方）。
+
+**点这一行就会自动尝试拉起密匣**（页面挂载时调用宿主 `POST /plugins/dsh-mimavault/launch`），
+面板显示四种状态：
+
+| 状态 | 含义 |
+|---|---|
+| 已连接密匣 | 本地 API 可用，附端口号 |
+| 密匣已启动，未就绪 | 进程在跑，但没登录或没勾 `Local API (DSH)` |
+| 密匣未运行 | 点了会尝试启动可执行文件 |
+| 未找到密匣 | 需要在插件配置里填 `appPath` |
+
+可执行文件路径按「配置 `appPath` → `%LOCALAPPDATA%\Programs\密匣 MimaVault\` → 各盘符
+`\Programs\密匣 MimaVault\`」依次探测，面板底部会显示实际解析到的路径。
+
+面板只显示连接状态，不展示任何密码数据。
+
 ## 部署
 
 ### 1. MimaVault 侧
