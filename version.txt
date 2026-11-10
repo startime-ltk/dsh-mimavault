@@ -1,1 +1,1 @@
-0.3.3|https://github.com/startime-ltk/dsh-mimavault/releases/tag/v0.3.3|修复新增条目表单展开时侧栏面板无法下滑
+0.3.4|https://github.com/startime-ltk/dsh-mimavault/releases/tag/v0.3.4|修复检查更新报「Unexpected end of JSON input」：同 path 重复注册导致 405 空响应
